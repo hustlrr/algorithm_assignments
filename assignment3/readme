@@ -1,0 +1,8 @@
+Assignment3_Greedy.pdf 是作业题目
+
+answer3.txt中是我写的所有题目对应的代码或伪代码
+
+linked_list_prior_queue\binary_heap_prior_queue\binomial_prior_queue\fib_prior_queue分别是基于链表、二叉堆、二项堆、斐波那契堆实现优先队列
+
+Dijkstra.py是dijkstra算法的python实现
+huffman.py是huffman编码的python实现

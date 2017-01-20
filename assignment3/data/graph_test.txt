@@ -1,0 +1,13 @@
+s a 9
+s b 14
+s c 15
+a d 24
+b d 18
+b e 30
+c e 20
+c t 44
+d e 2
+d t 19
+e f 11
+e t 16
+f t 6

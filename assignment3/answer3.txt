@@ -1,0 +1,667 @@
+1、
+canConstructGraph(d):	//判断是否存在一个无向图，它的节点的度是d1,d2,……,dn
+	if d 是空数组：
+		return False
+	end if
+	n = len(d)
+	for i in range(n) do
+		if sum(d) is odd number then
+			return False
+		else if sum(d) == 0 then
+			return True
+		end if
+		sort d in non-ascending order
+		if d[0] > len(d) then
+			return False
+		end if
+		d[1,2,...,len(d)]中的每个元素减1
+		if there is negative number in d then
+			return False
+		end if
+		d = d[1,2,...,len(d)]
+	end for
+
+# coding=utf-8
+
+def canConstructGraph(d):
+    '''
+    :param d: list[int],表示度数的数组
+    :return:
+    '''
+    if d is None:
+        return False
+    for i in range(len(d)):
+        if d[i] < 0:
+            return False
+    n = len(d)
+    for i in range(n):
+        len_ = n - i
+        s = sum(d)
+        if s % 2:  # 度的和是奇数一定不可能
+            return False
+        elif s == 0:
+            return True
+        d = sorted(d, reverse=True)
+
+        if d[0] >= len_:  # 最大的度数大于节点个数也一定不可能
+            return False
+
+        for j in range(d[0]):
+            d[1 + j] -= 1
+            if d[1 + j] < 0:  # 度数小于0也不可能
+                return False
+        d = d[1:]
+    return True
+
+
+if __name__ == '__main__':
+    d = [2, 2, 2]
+    print canConstructGraph(d)
+
+2、
+schedule(p, f):	//pi是第i个任务在supercomputer上的运行时间，fi是第i个任务在pc上的运行时间
+	sort f in non-ascending order	//非升序排序
+	根据f得到的任务次序提交任务到supercomputer
+	//计算完成所有任务所需时间
+	t = 0	//总时间
+	super_t = 0		//supercomputer上的时间
+	for i = 0 to n - 1 do
+		super_t += p[i]
+		if (super_t + f[i]) > t then
+			t = super_t + f[i]
+		end if
+	end for
+	return t
+
+3、
+numOfRadar(P):	//Pi包含(x,y)两个元素
+	sort P base on x
+	num = 1
+	rmax = P[0].x
+	for i = 0 to n - 1 do
+		compute li and ri using d
+		if li > rmax then
+			num += 1
+		end if
+		rmax = ri
+	end for
+	
+4、
+maxMultiplication(A,B):
+	sort A in ascending order
+	sort B in ascending order
+	return product 
+
+def maxMultiplication(A, B):
+    '''
+    :param A: 
+    :param B: 
+    :return: 
+    '''
+    A = sorted(A)
+    B = sorted(B)
+    import math
+    res = 1
+    for a, b in zip(A, B):
+        res = res * (math.pow(a, b))
+    return res
+
+5、
+# coding=utf-8
+
+def loadFile(path):
+    with open(path) as fr:
+        content = fr.read()
+    return content
+
+
+class HuffmanNode:
+    def __init__(self, left=None, right=None, data=None):
+        self.left = left
+        self.right = right
+        self.data = data
+
+
+from collections import Counter
+import heapq
+
+
+class HuffmanCode:
+    def __init__(self, content):
+        self.content = content
+        self.freq = [(cnt, HuffmanNode(data=ch)) for ch, cnt in Counter(self.content).items()]
+        heapq.heapify(self.freq)  # 最小堆
+        self.tree = self.createHuffmanTree()
+        self.code = {}
+        self.getHuffmanCode(self.tree, prefix='', code=self.code)
+
+    def createHuffmanTree(self):
+        while len(self.freq) > 1:
+            l, r = heapq.heappop(self.freq), heapq.heappop(self.freq)
+            newnode = HuffmanNode(left=l[1], right=r[1])
+            heapq.heappush(self.freq, (l[0] + r[0], newnode))
+        return self.freq[0][1]
+
+    def getHuffmanCode(self, node, prefix="", code={}):
+        if node and node.left is None and node.right is None:
+            code[node.data] = prefix
+            return
+        self.getHuffmanCode(node.left, prefix=prefix + '0', code=code)
+        self.getHuffmanCode(node.right, prefix=prefix + '1', code=code)
+
+    def compress(self, compress_file=None):
+        codes = ''
+        for ch in content:
+            codes += self.code[ch]
+        if compress_file:
+            packed_data = ''.join(chr(int(codes[i:i + 8], 2)) for i in range(0, len(codes), 8))
+            packed_data = chr(len(codes) % 8) + packed_data  # 记录最后一个编码的长度
+            with open(compress_file, 'wb') as fw:
+                fw.write(packed_data)
+        return codes
+
+    def decodeHuffman(self, codes):
+        n = len(codes)
+        i = 0
+        res = ''
+        while i < n:
+            node = self.tree
+            while node and node.left and node.right:
+                if codes[i] == '0':
+                    node = node.left
+                else:
+                    node = node.right
+                i += 1
+            res += node.data
+        return res
+
+    def decodeHuffmanFromFile(self, compress_file):
+        with open(compress_file, 'rb') as fr:
+            compress_data = fr.read()
+
+        last_byte_length, compress_data, last_byte = (
+            compress_data[0], compress_data[1:-1], compress_data[-1]
+        )
+        if not last_byte_length:
+            last_byte_length = 8
+        codes = reduce(lambda x, y: x + y, [bin(ord(byte))[2:].zfill(8) for byte in compress_data]) \
+                + bin(ord(last_byte))[2:].zfill(ord(last_byte_length))
+        print 'read compress file done'
+        res = self.decodeHuffman(codes)
+        return res
+
+
+if __name__ == '__main__':
+    content = loadFile(r'data/Aesop_Fables.txt')
+    huffman = HuffmanCode(content)
+    codes = huffman.compress(compress_file=r'data/Aesop_Fables.huff')
+    print 'compress done'
+    decodes = huffman.decodeHuffmanFromFile(compress_file=r'data/Aesop_Fables.huff')
+    print content == decodes
+
+6、
+（1）
+class linkedList:
+    def __init__(self, d=None, node=None):
+        self.dist = d
+        self.node = node
+        self.next_ = None
+
+
+class priorQueue:
+    def __init__(self):
+        self.head = linkedList()
+
+    def insert(self, node, dist):
+        p = linkedList(d=dist, node=node)
+        p.next_ = self.head.next_
+        self.head.next_ = p
+
+    def extractmin(self):
+        mindist, minnode = (1 << 32), 0  # 此处的初始化应该大于创建pq时的初始化，否则如果剩余的节点都是无法到达的节点会陷入死循环
+        p = self.head.next_
+        while p:
+            if p.dist < mindist:
+                mindist = p.dist
+                minnode = p.node
+            p = p.next_
+        p = self.head
+        while p and p.next_:
+            if p.next_.node == minnode:
+                p.next_ = p.next_.next_
+                break
+            p = p.next_
+        return (mindist, minnode)
+
+    def decreasekey(self, node, newdist):
+        p = self.head.next_
+        while p:
+            if p.node == node:
+                p.dist = newdist
+                break
+            p = p.next_
+
+    def empty(self):
+        return self.head.next_ == None
+
+
+def dijkstra(G, s):
+    key = {node: (1 << 31) for node in G.keys()}  # s到所有节点的距离
+    key[s] = 0
+    exploredSet = set()  # 已经被访问过的所有节点
+    exploredSet.add(s)  # 源节点已被访问
+
+    pq = priorQueue()
+    for node in G.keys():
+        pq.insert(node=node, dist=key[node])
+    while not pq.empty():
+        (mindist, minnode) = pq.extractmin()
+        print len(exploredSet), minnode, mindist
+        exploredSet.add(minnode)
+        for adjweight, adjnode in G[minnode]:
+            if adjnode in exploredSet:  # 已经访问过
+                continue
+            if mindist + adjweight < key[adjnode]:
+                key[adjnode] = mindist + adjweight
+                pq.decreasekey(adjnode, mindist + adjweight)
+                # print 'decrease', adjnode, pq.points[adjnode].dist
+    return key
+
+import time
+
+if __name__ == '__main__':
+    G = loadGraph(r'data/graph.txt')
+    s = time.clock()
+    sourcenode = '0'
+    print 'source node:', sourcenode
+    key = dijkstra(G, sourcenode)
+    t = time.clock()
+    print 'time = ', t - s
+    with open(r'data/dist_linked_list', 'w') as fw:
+        for node, dist in key.items():
+            fw.write('%d %d\n' % (node, dist))
+
+（2）
+def dijkstra(G, s):
+    import heapq
+    key = {node: 0 for node in G.keys()}  # s到所有节点的距离
+    pq = [[key[s], s, ]]  # 保存未被访问的节点的距离
+    exploredSet = set()  # 已经被访问过的所有节点
+    exploredSet.add(s)
+    heapq.heapify(pq)
+    inf = 1<<31
+    for node in G.keys():
+        if node == s:
+            continue
+        key[node] = inf
+        heapq.heappush(pq, [inf, node])
+
+    while len(pq):
+        v = heapq.heappop(pq)
+        dist, nodev = v
+        exploredSet.add(nodev)
+        for adj in G[nodev]:
+            w, adjnode = adj
+            if adjnode in exploredSet:
+                continue
+            if key[nodev] + w < key[adjnode]:
+                for idx, (d, n) in enumerate(pq):
+                    if adjnode == n:
+                        pq[idx][0] = key[nodev] + w
+                        key[adjnode] = key[nodev] + w
+                heapq.heapify(pq)
+    return key
+
+import time
+
+if __name__ == '__main__':
+    G = loadGraph(r'data/graph.txt')
+    s = time.clock()
+    sourcenode = '0'
+    print 'source node:', sourcenode
+    key = dijkstra(G, sourcenode)
+    t = time.clock()
+    print 'time = ', t - s
+    with open(r'data/dist_binary_heap', 'w') as fw:
+        for node, dist in key.items():
+            fw.write('%s %d\n' % (node, dist))
+	
+（3）
+class binomialNode:
+    def __init__(self, node=None, dist=None):
+        self.node = node
+        self.dist = dist
+        self.parent = None
+        self.child = None
+        self.sibling = None
+        self.degree = 0
+
+
+class priorQueue:
+    def __init__(self):
+        self.head = binomialNode()
+        self.points = {}
+
+    def merge(self, h2):
+        p1 = self.head.sibling if self.head else None  # merge
+        p2 = h2.head.sibling if h2.head else None
+        self.head.sibling = None
+        p = self.head
+
+        def move2anotherlist(p, p1):
+            tmp = p1.sibling
+            p1.sibling = p.sibling
+            p.sibling = p1
+            p1 = tmp
+            return p1
+
+        while p1 and p2:
+            if p1.degree < p2.degree:
+                p1 = move2anotherlist(p, p1)
+            elif p1.degree > p2.degree:
+                p2 = move2anotherlist(p, p2)
+            else:
+                p1 = move2anotherlist(p, p1)
+                p = p.sibling
+                p2 = move2anotherlist(p, p2)
+            p = p.sibling
+        while p1:
+            p1 = move2anotherlist(p, p1)
+            p = p.sibling
+        while p2:
+            p2 = move2anotherlist(p, p2)
+            p = p.sibling
+
+    def union(self, h2):
+        def link(y, z):  # z成为y的父节点
+            y.parent = z
+            y.sibling = z.child
+            z.child = y
+            z.degree += 1
+
+        self.merge(h2)
+        if self.empty():
+            return
+        prev_p, p, next_p = self.head, self.head.sibling, self.head.sibling.sibling
+        while next_p:
+            if (p.degree != next_p.degree) or \
+                    (next_p.sibling and p.degree == next_p.sibling.degree):
+                prev_p = p
+                p = next_p
+            elif p.dist <= next_p.dist:
+                p.sibling = next_p.sibling
+                link(next_p, p)
+            else:
+                prev_p.sibling = next_p
+                link(p, next_p)
+                p = next_p
+            next_p = p.sibling
+        return self.head
+
+    def insert(self, node, dist):
+        '''
+        :param node:节点编号
+        :param dist:源节点到该节点的距离
+        :return:
+        '''
+        h2 = priorQueue()
+        h2.head.sibling = binomialNode(node=node, dist=dist)
+        self.union(h2)
+        self.points[node] = h2.head.sibling
+        return self.head
+
+    def extractmin(self):
+        '''
+        :return:
+        '''
+        pmin, distmin = None, (1 << 32)
+        p = self.head.sibling
+        while p:
+            pmin, distmin = (p, p.dist) if (pmin is None or distmin > p.dist) else (pmin, distmin)
+            p = p.sibling
+        p = self.head
+        while p and p.sibling:
+            if p.sibling == pmin:
+                p.sibling = p.sibling.sibling
+                break
+            p = p.sibling
+        if pmin:
+            h2 = priorQueue()
+            h2.head.sibling = pmin.child
+            self.union(h2)
+            self.points.pop(pmin.node)
+        return (pmin.dist, pmin.node)
+
+    def decreasekey(self, node, newdist):
+        '''
+        :param node:
+        :param newdist:
+        :return:
+        '''
+
+        def swap(y, z):
+            z.dist, y.dist = y.dist, z.dist
+            self.points[z.node], self.points[y.node] = self.points[y.node], self.points[z.node]
+            z.node, y.node = y.node, z.node
+
+        p = self.points[node]
+        p.dist = newdist
+        y = p
+        z = p.parent
+        while z and z.dist > y.dist:
+            # z.dist, y.dist = y.dist, z.dist
+            swap(y, z)
+            y = z
+            z = y.parent
+
+    def empty(self):
+        '''
+        :return:
+        '''
+        return self.head.sibling is None
+
+
+def dijkstra(G, s):
+    key = {node: (1 << 31) for node in G.keys()}  # s到所有节点的距离
+    key[s] = 0
+    exploredSet = set()  # 已经被访问过的所有节点
+    exploredSet.add(s)  # 源节点已被访问
+
+    pq = priorQueue()
+    for node in G.keys():
+        pq.insert(node=node, dist=key[node])
+    while not pq.empty():
+        (mindist, minnode) = pq.extractmin()
+        print len(exploredSet), minnode, mindist
+        exploredSet.add(minnode)
+        for adjweight, adjnode in G[minnode]:
+            if adjnode in exploredSet:  # 已经访问过
+                continue
+            if mindist + adjweight < key[adjnode]:
+                key[adjnode] = mindist + adjweight
+                pq.decreasekey(adjnode, mindist + adjweight)
+                # print 'decrease', adjnode, pq.points[adjnode].dist
+    return key
+
+
+import time
+
+if __name__ == '__main__':
+    G = loadGraph(r'data/graph.txt')
+    s = time.clock()
+    sourcenode = '0'
+    print 'source node:', sourcenode
+    key = dijkstra(G, sourcenode)
+    t = time.clock()
+    print 'time = ', t - s
+    with open(r'data/dist_binomial_heap', 'w') as fw:
+        for node, dist in key.items():
+            fw.write('%s %d\n' % (node, dist))
+(4)
+class fibNode:
+    def __init__(self, d=None, node=None):
+        self.dist = d
+        self.node = node
+        self.parent = None
+        self.left = self
+        self.right = self
+        self.child = None
+        self.degree = 0
+        self.mark = False
+
+
+class priorQueue:
+    def __init__(self):
+        self.head = fibNode()
+        self.min = None
+        self.n = 0
+        # self.dn = 0  # 最大的根结点度数
+        self.points = {}
+
+    def merge(self, p):  # 将结点p合入self.head
+        p.right = self.head.right
+        p.left = self.head
+        self.head.right.left = p
+        self.head.right = p
+
+    def insert(self, node, dist):
+        p = fibNode(d=dist, node=node)
+        self.points[node] = p
+        self.merge(p)
+        if self.min is None or self.min.dist > p.dist:
+            self.min = p
+        self.n = self.n + 1
+
+    def link(self, y, x):  # 把y从根结点删除，成为x的子节点
+        y.left.right = y.right  # 把y从根结点链表删除
+        y.right.left = y.left
+
+        if x.child is not None:
+            y.right = x.child  # 使y成为x的孩子节点
+            y.left = x.child.left
+            x.child.left.right = y
+            x.child.left = y
+        else:
+            y.left, y.right = y, y
+        x.child = y
+        y.parent = x
+        x.degree += 1
+
+        y.mark = False
+
+    def consolidate(self):
+        a = [None for _ in range(self.n)]
+        w = self.head.right
+        while w != self.head:
+            # print 'w', w.dist
+            tmp = w.right
+            x = w
+            d = x.degree
+            while a[d] is not None:
+                y = a[d]
+                if x.dist > y.dist:
+                    x, y = y, x
+                self.link(y, x)
+                a[d] = None
+                d = d + 1
+            a[d] = x
+            w = tmp     # 调试,遍历根结点链表不能使用w=w.right，因为w可能已经成为另一个根结点的子节点，所以w.right也不再是根结点
+        self.min = None
+        for i in range(self.n):
+            if a[i] is not None:
+                # self.merge(a[i])
+                self.min = a[i] if (self.min is None or self.min.dist > a[i].dist) else self.min
+
+    def extractmin(self):
+        z = self.min
+        if z is not None:
+            x = z.child
+            for _ in range(z.degree):
+                x.parent = None
+                tmp = x.right
+                self.merge(x)
+                x = tmp
+            z.right.left = z.left  # 将z从根链表删除
+            z.left.right = z.right
+            if z == z.right:
+                self.min = None
+            else:
+                self.min = z.right
+                self.consolidate()
+            self.n = self.n - 1
+        return (z.dist, z.node)
+
+    def cut(self, x, y):    # 把x从y的孩子链表删除，加入根链表
+        x.right.left = x.left
+        x.left.right = x.right
+        if x == x.right:
+            y.child = None
+        else:				# 在算法导论的伪代码中没有处理else的情况，但是显然如果不处理会丢掉子节点
+            y.child = x.right
+        y.degree = y.degree - 1
+
+        self.merge(x)
+        x.parent = None
+        x.mark = False
+
+    def cascadingCut(self, y):
+        z = y.parent
+        if z is not None:
+            if y.mark == False:
+                y.mark = True
+            else:
+                self.cut(y, z)
+                self.cascadingCut(z)
+
+    def decreasekey(self, node, newdist):
+        x = self.points[node]
+        x.dist = newdist
+        y = x.parent
+        if y is not None and x.dist < y.dist:
+            # print 'cut'
+            self.cut(x, y)
+            self.cascadingCut(y)
+        if x.dist < self.min.dist:
+            self.min = x
+
+    def empty(self):
+        return self.head.right == self.head
+
+
+def dijkstra(G, s):
+    key = {node: (1 << 31) for node in G.keys()}  # s到所有节点的距离
+    key[s] = 0
+    exploredSet = set()  # 已经被访问过的所有节点
+    exploredSet.add(s)  # 源节点已被访问
+
+    pq = priorQueue()
+    for node in G.keys():
+        pq.insert(node=node, dist=key[node])
+    while not pq.empty():
+        (mindist, minnode) = pq.extractmin()
+        print len(exploredSet), minnode, mindist
+        exploredSet.add(minnode)
+        for adjweight, adjnode in G[minnode]:
+            if adjnode in exploredSet:  # 已经访问过
+                continue
+            if mindist + adjweight < key[adjnode]:
+                key[adjnode] = mindist + adjweight
+                pq.decreasekey(adjnode, mindist + adjweight)
+                # print 'decrease', adjnode, pq.points[adjnode].dist
+    return key
+
+
+import time
+
+if __name__ == '__main__':
+    G = loadGraph(r'data/graph.txt')
+    s = time.clock()
+    sourcenode = '0'
+    print 'source node:', sourcenode
+    key = dijkstra(G, sourcenode)
+    t = time.clock()
+    print 'time = ', t - s
+
+    with open(r'data/dist_fib_heap', 'w') as fw:
+        for node, dist in key.items():
+            fw.write('%s %d\n' % (node, dist))

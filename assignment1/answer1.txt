@@ -1,0 +1,712 @@
+1、
+i是将数组A划分成左右两边的位置，划分后，A的左边有i个元素，右边有n-i个元素；相应的，B的左边有n-i个元素，B的右边有i个元素(因为要保证A，B左右两边的并集都有n个元素)。
+假设A[i]表示数组A中第i大的元素，类似的，B[j]表示数组B中第j大的元素，其中i+j=n
+当i>0 and i<n:
+	A[i]<B[j+1] and B[j]<A[i+1]时，表示我们找到了正确的划分位置，返回A[i],B[j]中较大的一个即为第n大的元素
+	A[i]>B[j+1],表示i的划分位置太靠右，所以此时我们要减小i，将i的搜索范围减小到[imin,i-1]
+	B[j]>A[i+1],表示i的划分位置太靠左，所以此时我们要增大i，将i的搜索范围扩大到[i+1,imax]
+当i==0:
+	表示A中所有的元素都在右边，则B的最大的元素(B[n])为所求
+当i==n:
+	表示A中所有元素都在左边，则A的最大的元素(A[n])为所求
+reference:
+https://discuss.leetcode.com/topic/4996/share-my-o-log-min-m-n-solution-with-explanation
+T(n)=T(n/2)+O(1)
+所以，T(n)=O(logn)
+def query(nums, k):
+    '''
+    :param nums: 数据集
+    :param k: nums中第k大的元素
+    :return:
+    '''
+    return nums[k - 1]
+
+
+def findMedian(A, B, n):
+    '''
+    :param A: 数据集A
+    :param B: 数据集B
+    :param n: 每个数据集中元素的个数
+    :return:
+    '''
+    imin, imax = 0, n
+    while imin <= imax:
+        i = (imin + imax) / 2
+        j = n - i
+
+        if j > 0 and i < n and query(B, j) > query(A, i + 1):  # i太小
+            imin = i + 1
+        elif i > 0 and j < n and query(A, i) > query(B, j + 1):  # i太大
+            imax = i - 1
+        else:
+            if i == 0:
+                return query(B, n)
+            elif j == 0:
+                return query(A, n)
+            else:
+                return max(query(A, i), query(B, j))
+
+2、快排变形，当主元的位置为k-1时，说明所求元素被找到
+def find_k_largest_element(A, k):
+    '''
+    :param A: 未排序的数组
+    :param k: 找到数组A中第k大的元素
+    :return: 数组A中第K大的元素
+    '''
+    left, right = 0, len(A) - 1
+    k = right - k + 2  # 第k大的元素即顺序中的第len+1-k个元素
+    while left < k:
+        i, j = left, left + 1
+        x = A[left]  # value of pivot
+        while j <= right:
+            if A[j] < x:
+                i += 1
+                A[i], A[j] = A[j], A[i]
+            j += 1
+        if i + 1 == k:
+            return x
+        A[i], A[left] = A[left], A[i]
+        if i + 1 < k:  # i是当前pivot所在的index，即pivot是第i+1小的元素，如果i+1<k，说明第k小的元素在左边
+            left = i + 1
+        else:
+            right = i - 1
+
+3、假设树节点结构体如下：
+{
+	lchild	//指向左孩子
+	rchild	//指向右孩子
+	value 	//该节点的值
+}
+findLocalMin(root):
+	if	root.lchild and root.rchild:	#如果是非叶子节点
+		lvalue, rvalue = root.lchild.value, root.rchild.value
+		value = root.value
+		if value < lvalue and value < rvalue:	#该节点的值小于左右子节点的值，则该节点的值是local minimal
+			return value
+		elif lvalue < value:	#如果左节点的值小于该节点的值，向左子树方向寻找
+			return findLocalMin(root.lchild)
+		elif rvalue < value:
+			return findLocalMin(root.rchild)
+	else:
+		return root.value	#叶子节点(根据递归的路径知道，叶子节点的值一定小于父节点的值)
+		
+T(n)=T(n/2)+O(1)
+所以T(n)=O(logn)
+
+4、给出n*n的grids，一个点只与它周围的4个点存在边关联。
+findLocalMinInGrids(x,y,flags,grids):	//flags是一个n*n的grids,用来记录某个点grids[i][j]是否已经被访问了，避免重复访问
+	directs = [[0,-1],[0,1],[-1,0],[1,0]]
+	for i = 0 to 3:
+		nx, ny = x + directs[i][0], y + directs[i][1]
+		if (nx,ny) in grids and flags[nx][ny] is false:
+			flags[nx][ny]=true
+		else:
+			continue
+		if grids[nx][ny] < grids[x][y]:
+			flags[nx][ny] = true
+			return findLocalMinInGrids(nx,ny,flags,grids)
+	return grids[x][y]
+初始化：
+定义n*n的数组flags,并将flags中所有元素赋值为flase
+ans = findLocalMinInGrids(0,0,flags,grids)
+因为访问路径中不存在回溯，所以最多需要2n步找到local minimal，所以时间复杂度T(n)=O(n)
+
+5、
+def removeCnt(D, N, distance):
+    '''
+    :param D: 每块石头离起点的距离
+    :param distance: 每块石头之间的最小距离
+    :return: 为了达到最小距离distance要移去的石头
+    '''
+    lastidx = 0
+    cnt = 0
+    for idx in range(1, N + 1):
+        if D[idx] - D[lastidx] >= distance:
+            lastidx = idx
+        else:
+            cnt += 1
+    if D[-1] - D[lastidx] < distance:
+        cnt += 1
+    return cnt
+
+
+def hopscotch(L, N, M, D):
+    '''
+    :param L: 从起点到终点的距离
+    :param N: 这条路径上共有N块石头
+    :param M: 这条路径上允许移去M块石头
+    :param D: 这N块石头离起点的距离
+    :return: 最多允许移去M快石头的条件下，两块石头之间的最小间距的最大值
+    '''
+    D.insert(0, 0)
+    D.append(L)
+    D = sorted(D)   # 将各块石头离起点的距离从小到大排序
+
+    low, high = 0, L  # N=M时，得到最大值L
+    ans = 0
+    while low <= high:
+        mid = low + (high - low) / 2
+        cnt = removeCnt(D, N, mid)
+        if cnt > M:
+            high = mid - 1
+        else:
+            low = mid + 1
+            ans = mid if mid > ans else ans
+    return ans
+
+
+if __name__ == '__main__':
+    L = 25
+    N = 5
+    M = 2
+    D = [2, 11, 14, 17, 21]
+    print hopscotch(L, N, M, D)
+
+
+6、
+def countSignificantInversions(A, left, right):
+    '''
+    :param A: 数组
+    :param left: A的左边界
+    :param right: A的右边界
+    :return: the number of significant inversions(i<j,A[i]>3A[j])
+    '''
+    if left >= right:
+        return 0
+
+    mid = left + (right - left) / 2
+    cntLeft = countSignificantInversions(A, left, mid)
+    cntRight = countSignificantInversions(A, mid + 1, right)
+    ALeft, lenLeft = A[left: mid + 1], mid - left + 1
+    ARight, lenRight = A[mid + 1: right + 1], right - mid
+
+    cnt = cntLeft + cntRight
+    idxLeft, idxRight = 0, 0
+    for k in range(right - left + 1):
+        if idxLeft < lenLeft and idxRight < lenRight:
+            if ALeft[idxLeft] > ARight[idxRight]:
+                if ALeft[idxLeft] > 3 * ARight[idxRight]:   # 判断是否为逆序对
+                    cnt += (lenLeft - idxLeft)
+                A[left + k] = ARight[idxRight]
+                idxRight += 1
+            else:
+                A[left + k] = ALeft[idxLeft]
+                idxLeft += 1
+        elif idxLeft < lenLeft:
+            A[left + k] = ALeft[idxLeft]
+            idxLeft += 1
+        else:
+            A[left + k] = ARight[idxRight]
+            idxRight += 1
+    return cnt
+
+
+if __name__ == '__main__':
+    # import random
+    # A = range(1, 10)
+    # random.shuffle(A)
+    A = [2, 5, 8, 7, 6, 3, 9, 4, 1]
+    print A
+    print countSignificantInversions(A, 0, len(A) - 1)
+    print A
+
+7、
+(1)、
+找到纵坐标最低的点，如果存在两个纵坐标一样的点，取横坐标更小的点，不妨假设是b;
+将b点与n个g点连接，得到n条将空间分为n部分的射线L1,L2,……,Ln，根据射线与横轴的夹角大小将划分得到的空间记作x1,x2,……,xn;
+遍历这n个空间，累计前i个空间中的b点数目numi，当numi==i - 1时，Li即为所求。
+
+时间复杂度：
+由于在第二步中需要对n个空间根据夹角进行排序，所以时间复杂度是O(nlogn)
+正确性证明：
+显然xn==n - 1,0<=x1<=x2<=……<=xn=n-1,如果num1!=0,则它有n-1个取值选择；num2!=1，则它有n-2个取值选择；类似的，numn有0个取值选择，但这不成立，所以一定存在一个i，使得numi=i-1.
+
+(2)、在最坏情况下，每次一侧剩下n-1个g点和n-1个b点，但是另一侧没有点，此时的时间复杂度是O(n^2logn).
+
+8、(1)
+def sortAndCount(A, left, right):
+    '''
+    :param A: 数组A
+    :return: 查找数组A中的逆序对个数
+    '''
+    if left >= right:
+        return 0
+    mid = left + (right - left) / 2
+    res = 0
+    res += sortAndCount(A, left, mid)
+    res += sortAndCount(A, mid + 1, right)
+    partLeft = A[left:mid + 1]
+    partRight = A[mid + 1: right + 1]
+    pl, pr, lenLeft, lenRight = 0, 0, len(partLeft), len(partRight)
+    for k in range(left, right + 1):
+        if pl <= mid - left and pr <= right - mid - 1:
+            if partLeft[pl] < partRight[pr]:
+                A[k] = partLeft[pl]
+                pl += 1
+            else:
+                A[k] = partRight[pr]
+                res += (lenLeft - pl)
+                pr += 1
+        elif pl <= mid - left:
+            A[k] = partLeft[pl]
+            pl += 1
+        else:
+            A[k] = partRight[pr]
+            pr += 1
+    return res
+
+
+def naive(A):
+    len_ = len(A)
+    res = 0
+    for i in range(len_):
+        for j in range(i + 1, len_):
+            if A[i] > A[j]:
+                res += 1
+    return res
+(2)
+不可以，归并排序是一种稳定的排序方式，但是快速排序是一种不稳定的排序方式，不稳定性发生在pivot和最终的位置交换的时候。
+for example:
+[1,3,4,5,2]	当3作为主元的时候，2会被置换到前面，此时5,2的顺序改变。
+BTW，附上快排的两种实现方式：
+def partition(A, left, right):
+    x = A[left]  # 将第一个元素作为主元
+    i, j = left, right
+    while i <= j:
+        while i <= j and A[i] <= x:  # 从左向右扫描
+            i += 1
+        while i <= j and A[j] >= x:  # 从右向左扫描
+            j -= 1
+        if i < j:  # A[i] > x > A[j]
+            A[i], A[j] = A[j], A[i]
+    A[left], A[j] = A[j], A[left]	# 排序不稳定性来源
+    return j
+
+def partition(A, left, right):
+    x = A[left]  # 将第一个元素作为主元
+    i, j = left, left + 1
+    while j <= right:
+        if x > A[j]:    # 将所有大于主元的数字放在主元的左边
+            i += 1
+            A[i], A[j] = A[j], A[i]
+        j += 1
+    A[left], A[i] = A[i], A[left]
+    return i  # 主元位置
+
+def quickSort(A, left, right):
+    '''
+    :param A: 数组A
+    :return: 
+    '''
+    if left >= right:
+        return 0
+    mid = partition(A, left, right)
+    quickSort(A, left, mid - 1)
+    quickSort(A, mid + 1, right)
+
+9、
+import math
+
+
+def distance(p1, p2):
+    return math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) + (p1[1] - p2[1]) * (p1[1] - p2[1]))
+
+
+def findClosestPair(pX, pY):
+    '''
+    :param pX: 按照x坐标将所有的节点排序
+    :param pY: 按照y坐标将所有的节点排序
+    :return:距离最小的节点对的距离
+    '''
+    num = len(pX)
+    minDist = (1 << 31)
+    if num <= 4:  # 节点数目不多于5个的时候用暴力方法求解
+        for i in range(num):
+            for j in range(i + 1, num):
+                d = distance(pX[i], pX[j])
+                if d < minDist:
+                    minDist = d
+        return minDist
+
+    xm = (pX[0][0] + pX[-1][0])/2
+    pXLeft, pXRight, pYLeft, pYRight = [], [], [], []
+    # 小于xm的节点加入pXLeft, pYLeft；大于xm的节点加入pXRight，pYRight
+    for p in pX:
+        if p[0] <= xm:
+            pXLeft.append(p)
+        else:
+            pXRight.append(p)
+    for p in pY:
+        if p[0] <= xm:
+            pYLeft.append(p)
+        else:
+            pYRight.append(p)
+    if len(pXLeft) == 0:   # 如果一侧没有点，说明x的值都相同
+        return min([pYRight[i][1] - pYRight[i - 1][1] for i in range(1, len(pYRight))])
+    if len(pXRight) == 0:
+        return min([pYLeft[i][1] - pYLeft[i - 1][1] for i in range(1, len(pYLeft))])
+
+    # 分别对左右区域的节点对最小距离进行计算
+    leftMinDist = findClosestPair(pXLeft, pYLeft)
+    rightMinDist = findClosestPair(pXRight, pYRight)
+    minDist = leftMinDist
+    if rightMinDist < minDist:
+        minDist = rightMinDist
+
+    # 得到条带区域的节点
+    strips = []
+    for py in pY:
+        if math.fabs(py[0] - xm) < minDist:
+            strips.append(py)
+    # 计算条带区域内的节点对之间的距离
+    len_ = len(strips)
+    for i in range(len_):
+        for j in range(i + 1, len_):
+            if strips[j][1] - strips[i][1] >= minDist:  # 单方向大于minDist的距离不可能比minDist小
+                break
+            d = distance(strips[i], strips[j])
+            if d < minDist:
+                minDist = d
+    return minDist
+
+def findClosestPairStripNaive(pX, pY):
+    '''
+    :param pX: 按照x坐标将所有的节点排序
+    :param pY: 按照y坐标将所有的节点排序
+    :return:距离最小的节点对的距离
+    '''
+    num = len(pX)
+    minDist = (1 << 31)
+    if num <= 4:  # 节点数目不多于5个的时候用暴力方法求解
+        for i in range(num):
+            for j in range(i + 1, num):
+                d = distance(pX[i], pX[j])
+                if d < minDist:
+                    minDist = d
+        return minDist
+
+    xm = (pX[0][0] + pX[-1][0])/2
+    pXLeft, pXRight, pYLeft, pYRight = [], [], [], []
+    # 小于xm的节点加入pXLeft, pYLeft；大于xm的节点加入pXRight，pYRight
+    for p in pX:
+        if p[0] <= xm:
+            pXLeft.append(p)
+        else:
+            pXRight.append(p)
+    for p in pY:
+        if p[0] <= xm:
+            pYLeft.append(p)
+        else:
+            pYRight.append(p)
+    if len(pXLeft) == 0:   # 如果一侧没有点，说明x的值都相同
+        return min([pYRight[i][1] - pYRight[i - 1][1] for i in range(1, len(pYRight))])
+    if len(pXRight) == 0:
+        return min([pYLeft[i][1] - pYLeft[i - 1][1] for i in range(1, len(pYLeft))])
+
+    # 分别对左右区域的节点对最小距离进行计算
+    leftMinDist = findClosestPair(pXLeft, pYLeft)
+    rightMinDist = findClosestPair(pXRight, pYRight)
+    minDist = leftMinDist
+    if rightMinDist < minDist:
+        minDist = rightMinDist
+
+    # 得到条带区域的节点
+    strips = []
+    for py in pY:
+        if math.fabs(py[0] - xm) < minDist:
+            strips.append(py)
+    # 计算条带区域内的节点对之间的距离
+    tmp = naive(strips, strips)
+    if tmp < minDist:
+        minDist = tmp
+    return minDist
+
+def naive(pX, pY):	# 暴力求解
+    len_ = len(pX)
+    minDist = (1 << 31)
+    for i in range(len_):
+        for j in range(i + 1, len_):
+            d = distance(pX[i], pX[j])
+            if d < minDist:
+                minDist = d
+    return minDist
+
+import time
+
+if __name__ == '__main__':
+    import random
+
+    points = []
+    for i in range(1000):
+        points.append((random.randint(-100, 100), random.randint(-100, 100)))
+    points = list(set(points))
+    print '样本点个数：', len(points)
+
+    # points = [(-91, -11), (-90, -75), (-89, 98), (-89, 82), (-89, -75)]
+
+    start = time.clock()
+    pX = sorted(points, key=lambda p: p[0])
+    pY = sorted(points, key=lambda p: p[1])
+    print findClosestPair(pX, pY)
+    end = time.clock()
+    print '分治法耗时(strip中y方向差大于theta则break)：', (end - start)
+
+    start = time.clock()
+    pX = sorted(points, key=lambda p: p[0])
+    pY = sorted(points, key=lambda p: p[1])
+    print findClosestPairStripNaive(pX, pY)
+    end = time.clock()
+    print '分治法耗时(strip中用暴力搜索)：', (end - start)
+
+    start = time.clock()
+    print naive(pX, pY)
+    end = time.clock()
+    print '普通方法耗时：', (end -  start)
+
+10、strassen matrix multiplication
+import numpy as np
+import time
+
+
+def strassen(A, B):
+    '''
+    :param A: numpy.array
+    :param B: numpy.array
+    :return: numpy.array
+    '''
+    if A.shape != B.shape:
+        raise TypeError
+    row, col = A.shape
+    if row != col:
+        raise TypeError
+
+    C = np.zeros(shape=(row, col), dtype=float)
+    if row <= 10:    # 小于4时按普通矩阵乘法处理
+        for i in range(row):
+            for j in range(col):
+                C[i][j] = np.sum(A[i][k] * B[k][j] for k in range(row))
+        return C
+
+    flag = False
+    if row % 2:  # 奇数，则增加一行一列
+        C = np.zeros(shape=(row + 1, col + 1), dtype=float)
+        _ = C[-1, :col]
+        A = np.row_stack((A, _))
+        B = np.row_stack((B, _))
+        _ = C[:, -1]
+        A = np.column_stack((A, _))
+        B = np.column_stack((B, _))
+        flag = True
+        row, col = row + 1, col + 1
+    else:
+        C = np.zeros(shape=(row, col), dtype=float)
+
+    mid = row / 2
+    s = time.clock()
+    A11, A12, A21, A22 = A[:mid, :mid], A[:mid, mid:], A[mid:, :mid], A[mid:, mid:]
+    B11, B12, B21, B22 = B[:mid, :mid], B[:mid, mid:], B[mid:, :mid], B[mid:, mid:]
+    e = time.clock()
+    print 'stage1:', e - s
+
+    s = time.clock()
+    m1 = strassen(A11 + A22, B11 + B22)
+    m2 = strassen(A21 + A22, B11)
+    m3 = strassen(A11, B12 - B22)
+    m4 = strassen(A22, B21 - B11)
+    m5 = strassen(A11 + A12, B22)
+    m6 = strassen(A21 - A11, B11 + B12)
+    m7 = strassen(A12 - A22, B21 + B22)
+    e = time.clock()
+    print 'stage2:', e - s
+
+    s = time.clock()
+    C[:mid, :mid] = m1 + m4 - m5 + m7  # C11
+    C[:mid, mid:] = m3 + m5  # C12
+    C[mid:, :mid] = m2 + m4  # C21
+    C[mid:, mid:] = m1 - m2 + m3 + m6  # C22
+    e = time.clock()
+    print 'stage3:', e - s
+
+    if flag:
+        C = C[:row - 1, :col - 1]
+    return C
+
+def naiveMultiply(A, B):
+    '''
+    :param A: numpy.array
+    :param B: numpy.array
+    :return: numpy.array,result
+    '''
+    C = np.zeros(A.shape, dtype=float)
+    for i in range(C.shape[0]):
+        for j in range(C.shape[1]):
+            C[i][j] = np.sum([A[i][k] * B[k][j] for k in range(C.shape[0])])
+    return C
+
+if __name__ == '__main__':
+    size = 100
+
+    print 'shape:%d * %d'% (size, size)
+    A = np.reshape(np.array(range(1, size * size + 1), dtype=float), (size, size))
+    B = A = np.reshape(np.array(range(1, size * size + 1), dtype=float), (size, size))
+
+    start = time.clock()
+    C1 = strassen(A, B)
+    end = time.clock()
+    print 'strassen time:', (end - start)
+
+    start = time.clock()
+    C2 = naiveMultiply(A, B)
+    end = time.clock()
+    print 'naive time:', (end - start)
+    print (C1 == C2).all()
+	
+11、
+def bignumSum(x, y):
+    '''
+    :param x: str
+    :param y: str
+    :return: str，大数加法，假设x和y都是正数
+    '''
+    lenx, leny = len(x), len(y)
+    res, carry = '', 0
+    x, y = x[::-1], y[::-1]
+    for i in range(max(lenx, leny)):
+        tmp = carry
+        if i < lenx:
+            tmp += int(x[i])
+        if i < leny:
+            tmp += int(y[i])
+        res += str((tmp % 10))
+        carry = tmp / 10
+    if carry:
+        res += str(carry)
+    return res[::-1]
+
+
+def bignumSub(x, y):
+    '''
+    :param x: str
+    :param y: str
+    :return: str，大数减法
+    '''
+    flag = False  # x>=y时为False
+    lenx, leny = len(x), len(y)
+
+    if lenx < leny or (lenx == leny and x < y):
+        flag = True
+        x, y = y, x
+
+    res, carry = '', 0
+    x, y = x[::-1], y[::-1]
+
+    for i in range(max(lenx, leny)):
+        tmp = carry
+        if i < leny:
+            if int(x[i]) + tmp < int(y[i]):
+                res += str(10 + int(x[i]) + tmp - int(y[i]))
+                carry = -1
+            else:
+                res += str(int(x[i]) + tmp - int(y[i]))
+                carry = 0
+        else:
+            if int(x[i]) + tmp < 0:
+                res += str(10 + int(x[i]) + tmp)
+                carry = -1
+            else:
+                res += str(int(x[i]) + tmp)
+                carry = 0
+    zeroidx = 0
+    res = res[::-1]
+    for idx, digit in enumerate(res):
+        if digit != '0':
+            zeroidx = idx
+            break
+    res = res[zeroidx:]
+    return '-' + res if flag else res
+
+
+def onedigitMultiply(x, n):
+    '''
+    :param x: str
+    :param n: str,一位乘数
+    :return: str，积
+    '''
+    x = x[::-1]
+    res, carry = '', 0
+    for digit in x:
+        tmp = int(digit) * int(n) + carry
+        carry = tmp / 10
+        res += str(tmp % 10)
+    if carry:
+        res += str(carry)
+    return res[::-1]
+
+
+def bignumMultiplyNaive(x, y):
+    '''
+    :param x: str
+    :param y: str
+    :return: str，大数乘法（普通版本）
+    '''
+    res = '0'
+    y = y[::-1]
+    for idx, n in enumerate(y):
+        tmp = onedigitMultiply(x, n) + '0' * idx
+        res = bignumSum(res, tmp)
+    return res
+
+
+def bignumMultiplyQuick(x, y):
+    '''
+    :param x: str
+    :param y: str
+    :return: str，大数乘法(Karatsuba algorithm)
+    '''
+    lenx, leny = len(x), len(y)
+    if lenx <= 2 and leny <= 2:
+        return str(int(x) * int(y))
+
+    mid = max(lenx, leny) / 2
+    xl, xr, yl, yr = '0', '0', '0', '0'
+    if mid < lenx:
+        xl, xr = x[:lenx - mid], x[lenx - mid:]
+    else:
+        xr = x
+    if mid < leny:
+        yl, yr = y[:leny - mid], y[leny - mid:]
+    else:
+        yr = y
+
+    xlyl = bignumMultiplyQuick(xl, yl)
+    xryr = bignumMultiplyQuick(xr, yr)
+    p = bignumMultiplyQuick(bignumSum(xl, xr), bignumSum(yl, yr))
+    p = bignumSub(p, xlyl)
+    p = bignumSub(p, xryr)
+
+    xlyl = xlyl + '0' * (mid * 2)
+    p = p + '0' * mid
+
+    res = bignumSum(xlyl, p)
+    res = bignumSum(res, xryr)
+    return res
+
+
+import time
+import random
+
+if __name__ == '__main__':
+    x, y = random.randint(1, 10000), random.randint(1, 10000)
+    x, y = str(x), str(y)
+    print 'x = ', x, ' y = ', y
+
+    start = time.clock()
+    print bignumMultiplyQuick(x, y)
+    end = time.clock()
+    print '改进的乘法运行时间：', (end - start)
+
+    start = time.clock()
+    print bignumMultiplyNaive(x, y)
+    end = time.clock()
+    print '原始的乘法运算运行时间：', (end - start)
+
